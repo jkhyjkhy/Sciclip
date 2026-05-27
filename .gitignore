@@ -1,0 +1,13 @@
+
+# macOS
+.DS_Store
+EOF
+
+# VS Code
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.env

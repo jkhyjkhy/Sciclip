@@ -1,0 +1,33 @@
+# SciCLIP Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core ML
+torch>=2.1.0
+torchvision>=0.16.0
+
+# CLIP & PEFT (LoRA)
+transformers>=4.38.0
+peft>=0.9.0
+accelerate>=0.27.0
+
+# Dataset
+datasets>=2.18.0
+Pillow>=10.0.0
+
+# Vector search
+faiss-cpu>=1.7.4          # Use faiss-gpu if CUDA available
+
+# Demo UI
+gradio>=4.20.0
+
+# Training utilities
+tqdm>=4.66.0
+wandb>=0.16.0             # Optional: training logging
+
+# Evaluation
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Notebook
+ipykernel>=6.0.0
+ipywidgets>=8.0.0
