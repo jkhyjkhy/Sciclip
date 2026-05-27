@@ -193,14 +193,9 @@ def run_training(args, lora_r: int = None):
     lora_config = LoraConfig(
         r=lora_r,
         lora_alpha=args.lora_alpha,
-        target_modules=[
-            "vision_model.encoder.layers.*.self_attn.q_proj",
-            "vision_model.encoder.layers.*.self_attn.k_proj",
-            "vision_model.encoder.layers.*.self_attn.v_proj",
-            "text_model.encoder.layers.*.self_attn.q_proj",
-            "text_model.encoder.layers.*.self_attn.k_proj",
-            "text_model.encoder.layers.*.self_attn.v_proj",
-        ],
+        # Simple layer names — PEFT finds all q/k/v projections in both encoders.
+        # Wildcard paths (e.g. 'encoder.layers.*.q_proj') not supported in PEFT>=0.9
+        target_modules=["q_proj", "k_proj", "v_proj"],
         lora_dropout=args.lora_dropout,
         bias="none",
     )

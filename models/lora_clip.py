@@ -27,18 +27,10 @@ DEFAULT_LORA_CONFIG = LoraConfig(
     r=8,
     # Scaling factor: alpha / r controls effective learning rate of adapters
     lora_alpha=16,
-    # Which attention projections to adapt in both CLIP encoders
-    target_modules=[
-        # Visual encoder attention projections
-        "visual_projection",
-        "vision_model.encoder.layers.*.self_attn.q_proj",
-        "vision_model.encoder.layers.*.self_attn.k_proj",
-        "vision_model.encoder.layers.*.self_attn.v_proj",
-        # Text encoder attention projections
-        "text_model.encoder.layers.*.self_attn.q_proj",
-        "text_model.encoder.layers.*.self_attn.k_proj",
-        "text_model.encoder.layers.*.self_attn.v_proj",
-    ],
+    # PEFT will find all layers named q_proj/k_proj/v_proj in both encoders.
+    # Note: do NOT use wildcard paths like 'encoder.layers.*.self_attn.q_proj'
+    # as they are not supported in PEFT >= 0.9. Simple names work across versions.
+    target_modules=["q_proj", "k_proj", "v_proj"],
     lora_dropout=0.1,
     bias="none",
     # PEFT doesn't have a CLIP task type; we use FEATURE_EXTRACTION

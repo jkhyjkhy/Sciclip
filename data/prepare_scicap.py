@@ -77,34 +77,62 @@ def prepare_scicap(
     print("📥 Loading SciCap from HuggingFace...")
     print("   (This may take a few minutes on first run — images are downloaded)")
 
-    # SciCap is available under 'vector-institute/SciCap'
-    # It has columns: figure_id, caption, image (PIL), arxiv_id
-    try:
-        ds = load_dataset(
-            "vector-institute/SciCap",
-            split="train",
-            trust_remote_code=True,
-        )
-    except Exception:
-        # Fallback: try alternative dataset name
-        print("   Trying alternative dataset name...")
-        ds = load_dataset(
-            "Ino99/SciCap-No-Subfig-Img",
-            split="train",
-            trust_remote_code=True,
+    # Try multiple dataset sources in order (trust_remote_code removed in datasets>=2.20)
+    DATASET_CANDIDATES = [
+        ("datasets-server", "vector-institute/SciCap", "train"),
+        ("HF Hub",          "shunk031/SciCap",         "train"),
+        ("HF Hub fallback", "jmhessel/newyorker_caption_contest", None),  # placeholder, see below
+    ]
+
+    ds = None
+    for source_name, dataset_name, split in [
+        ("vector-institute/SciCap",       "train"),
+        ("shunk031/SciCap",               "train"),
+        ("taesiri/arxiv-figures",         "train"),
+    ]:
+        try:
+            print(f"   Trying: {source_name} ...")
+            ds = load_dataset(source_name, split=split)
+            print(f"   ✓ Loaded from {source_name}")
+            break
+        except Exception as e:
+            print(f"   ✗ Failed ({e.__class__.__name__})")
+            continue
+
+    if ds is None:
+        raise RuntimeError(
+            "\n❌ Could not load any SciCap dataset from HuggingFace.\n"
+            "Please check your internet connection or HF_TOKEN, then try:\n"
+            "  huggingface-cli login"
         )
 
     print(f"   Raw dataset size: {len(ds):,} samples")
+    print(f"   Columns: {ds.column_names}")
+
+    # Determine caption column name (varies by dataset)
+    caption_col = next(
+        (c for c in ["caption", "caption_str", "text"] if c in ds.column_names),
+        ds.column_names[0],
+    )
+    image_col = next(
+        (c for c in ["image", "figure", "img"] if c in ds.column_names),
+        None,
+    )
 
     # Filter and collect records
     records = []
     for i, sample in enumerate(tqdm(ds, desc="Filtering samples")):
-        if not filter_sample(sample):
+        # Unify caption field
+        sample_unified = dict(sample)
+        if caption_col != "caption":
+            sample_unified["caption"] = sample.get(caption_col, "")
+
+        if not filter_sample(sample_unified):
             continue
 
         # Save image to disk
-        img = sample["image"]
-        if not isinstance(img, Image.Image):
+        img = sample.get(image_col) if image_col else None
+        if img is None or not isinstance(img, Image.Image):
             continue
 
         img_filename = f"{i:07d}.jpg"
@@ -115,7 +143,7 @@ def prepare_scicap(
 
         records.append({
             "image_path": str(img_path),
-            "caption": sample["caption"].strip(),
+            "caption": sample_unified["caption"].strip(),
             "arxiv_id": sample.get("arxiv_id", ""),
             "figure_id": sample.get("figure_id", str(i)),
         })
