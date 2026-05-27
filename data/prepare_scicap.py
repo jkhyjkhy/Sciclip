@@ -60,7 +60,11 @@ def prepare_scicap(
     output_dir: str = "data",
     val_ratio: float = 0.1,
     seed: int = 42,
+    token: str = None,
 ):
+    # Use provided token or fall back to HF_TOKEN environment variable
+    import os
+    token = token or os.environ.get("HF_TOKEN", None)
     """
     Download SciCap from HuggingFace and prepare train/val splits.
 
@@ -85,14 +89,14 @@ def prepare_scicap(
     ]
 
     ds = None
-    for source_name, dataset_name, split in [
+    for source_name, split in [
         ("vector-institute/SciCap",       "train"),
         ("shunk031/SciCap",               "train"),
         ("taesiri/arxiv-figures",         "train"),
     ]:
         try:
             print(f"   Trying: {source_name} ...")
-            ds = load_dataset(source_name, split=split)
+            ds = load_dataset(source_name, split=split, token=token)
             print(f"   ✓ Loaded from {source_name}")
             break
         except Exception as e:
@@ -242,10 +246,13 @@ if __name__ == "__main__":
     parser.add_argument("--max_samples", type=int, default=20000)
     parser.add_argument("--output_dir", type=str, default="data")
     parser.add_argument("--val_ratio", type=float, default=0.1)
+    parser.add_argument("--token", type=str, default=None,
+                        help="HuggingFace token (or set HF_TOKEN env var)")
     args = parser.parse_args()
 
     prepare_scicap(
         max_samples=args.max_samples,
         output_dir=args.output_dir,
         val_ratio=args.val_ratio,
+        token=args.token,
     )
