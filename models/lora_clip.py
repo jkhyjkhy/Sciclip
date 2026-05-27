@@ -137,12 +137,20 @@ class LoRACLIP(nn.Module):
 
     def print_trainable_parameters(self):
         """Print LoRA adapter parameter count vs total parameters."""
-        self.clip.print_trainable_parameters()
+        if hasattr(self.clip, "print_trainable_parameters"):
+            self.clip.print_trainable_parameters()
+        else:
+            total_params = sum(p.numel() for p in self.clip.parameters())
+            trainable_params = sum(p.numel() for p in self.clip.parameters() if p.requires_grad)
+            print(f"trainable params: {trainable_params:,} || all params: {total_params:,} || trainable%: {100 * trainable_params / total_params:.4f}")
 
     def save_lora_adapter(self, save_path: str):
         """Save only the LoRA adapter weights (lightweight, ~MB)."""
-        self.clip.save_pretrained(save_path)
-        print(f"LoRA adapter saved to: {save_path}")
+        if hasattr(self.clip, "save_pretrained"):
+            self.clip.save_pretrained(save_path)
+            print(f"LoRA adapter saved to: {save_path}")
+        else:
+            print("Warning: Running vanilla base CLIP. No LoRA adapter to save.")
 
     @classmethod
     def from_pretrained_lora(
@@ -150,14 +158,21 @@ class LoRACLIP(nn.Module):
         base_model_name: str,
         lora_adapter_path: str,
     ) -> "LoRACLIP":
-        """Load a LoRA-CLIP model from a saved adapter checkpoint."""
+        """Load a LoRA-CLIP model from a saved adapter checkpoint.
+        If lora_adapter_path is None or 'none' or empty, loads the vanilla base CLIP model.
+        """
         from peft import PeftModel
 
         instance = cls.__new__(cls)
         nn.Module.__init__(instance)
 
         base_clip = CLIPModel.from_pretrained(base_model_name)
-        instance.clip = PeftModel.from_pretrained(base_clip, lora_adapter_path)
+        
+        if lora_adapter_path and str(lora_adapter_path).strip().lower() != "none":
+            instance.clip = PeftModel.from_pretrained(base_clip, lora_adapter_path)
+        else:
+            instance.clip = base_clip
+            
         instance.processor = CLIPProcessor.from_pretrained(base_model_name)
         instance.embed_dim = base_clip.config.projection_dim
         return instance
