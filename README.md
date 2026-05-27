@@ -24,8 +24,6 @@ Standard CLIP was trained on natural images and struggles with the abstract visu
 | MRR | — | — |
 | Trainable params | 100% | **~0.5%** |
 
-*(Fill in after training. See [evaluate.py](evaluate.py).)*
-
 ---
 
 ## Quick Start
@@ -132,7 +130,7 @@ sciclip/
 
 ## Run on Google Colab
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](notebooks/demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([notebooks/demo.ipynb](https://drive.google.com/file/d/1rsmRPA37vreScRY4gcr-IQTs9jB4VF7R/view?usp=sharing))
 
 Use Runtime → Change runtime type → **A100 GPU** for best performance.
 
