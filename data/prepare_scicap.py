@@ -81,47 +81,46 @@ def prepare_scicap(
     print("📥 Loading SciCap from HuggingFace...")
     print("   (This may take a few minutes on first run — images are downloaded)")
 
-    # Try multiple dataset sources in order (trust_remote_code removed in datasets>=2.20)
-    DATASET_CANDIDATES = [
-        ("datasets-server", "vector-institute/SciCap", "train"),
-        ("HF Hub",          "shunk031/SciCap",         "train"),
-        ("HF Hub fallback", "jmhessel/newyorker_caption_contest", None),  # placeholder, see below
-    ]
-
+    # Verified dataset names from HuggingFace Hub (checked 2026-05):
+    #   CrowdAILab/scicap  = original SciCap paper dataset
+    #   anselyang/SciCapPlus = extended version (fallback)
     ds = None
     for source_name, split in [
-        ("vector-institute/SciCap",       "train"),
-        ("shunk031/SciCap",               "train"),
-        ("taesiri/arxiv-figures",         "train"),
+        ("CrowdAILab/scicap",    "train"),
+        ("anselyang/SciCapPlus", "train"),
     ]:
         try:
             print(f"   Trying: {source_name} ...")
             ds = load_dataset(source_name, split=split, token=token)
             print(f"   ✓ Loaded from {source_name}")
+            print(f"   Columns: {ds.column_names}")
             break
         except Exception as e:
-            print(f"   ✗ Failed ({e.__class__.__name__})")
+            print(f"   ✗ Failed ({e.__class__.__name__}: {e})")
             continue
 
     if ds is None:
         raise RuntimeError(
             "\n❌ Could not load any SciCap dataset from HuggingFace.\n"
-            "Please check your internet connection or HF_TOKEN, then try:\n"
-            "  huggingface-cli login"
+            "Please check your HF_TOKEN and try running:\n"
+            "  from huggingface_hub import login; login()\n"
+            "Then re-run this cell."
         )
 
     print(f"   Raw dataset size: {len(ds):,} samples")
-    print(f"   Columns: {ds.column_names}")
 
-    # Determine caption column name (varies by dataset)
+    # CrowdAILab/scicap columns include 'Img-text' for caption and 'image' for image.
+    # anselyang/SciCapPlus uses 'caption' and 'image'.
     caption_col = next(
-        (c for c in ["caption", "caption_str", "text"] if c in ds.column_names),
+        (c for c in ["caption", "Img-text", "caption_str", "text"]
+         if c in ds.column_names),
         ds.column_names[0],
     )
     image_col = next(
         (c for c in ["image", "figure", "img"] if c in ds.column_names),
         None,
     )
+    print(f"   Caption column: '{caption_col}' | Image column: '{image_col}'")
 
     # Filter and collect records
     records = []
