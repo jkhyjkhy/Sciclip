@@ -6,7 +6,7 @@
 > *"attention mechanism architecture diagram"* → retrieves relevant figures instantly.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://mit-license.org/)
 
 ---
 
