@@ -19,4 +19,4 @@ data/*.zip
 checkpoints/
 *.index
 *.faiss
-LM_Zoo_SciCLIP_Paper/
+LM_Zoo_SciCLIP/
